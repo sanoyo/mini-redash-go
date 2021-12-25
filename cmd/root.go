@@ -18,6 +18,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/spf13/viper"
@@ -27,7 +28,7 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "mini-redash-gocobra",
+	Use:   "mini",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -73,7 +74,7 @@ func initConfig() {
 		// Search config in home directory with name ".mini-redash-gocobra" (without extension).
 		viper.AddConfigPath(home)
 		viper.SetConfigType("yaml")
-		viper.SetConfigName(".mini-redash-gocobra")
+		viper.SetConfigName(".mini")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
