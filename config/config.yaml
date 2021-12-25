@@ -1,0 +1,6 @@
+db:
+  host: localhost
+  name: sample
+  port: 5433
+  user: postgres
+  ssl: sidable

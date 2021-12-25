@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sanoyo/mini-redash-go/config"
 	"github.com/sanoyo/mini-redash-go/db"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -27,7 +28,7 @@ import (
 )
 
 const (
-	maxconn     = 10
+	maxconn     = 25
 	maxLifetime = 5 * time.Minute
 )
 
@@ -37,27 +38,24 @@ var connectCmd = &cobra.Command{
 	Short: "connect your data source",
 	Long:  `Cobra is a CLI library for Go that empowers applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// init db setting
-		if err := db.Init(maxconn, maxLifetime); err != nil {
-			errors.WithStack(err)
-		}
-		// TODO: zap 使う
-		fmt.Println("database connected")
-
-		// TODO:
+		Run()
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(connectCmd)
+}
 
-	// Here you will define your flags and configuration settings.
+func Run() {
+	config, err := config.InitConfig()
+	if err != nil {
+		errors.WithStack(err)
+	}
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// connectCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// connectCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	// init db setting
+	if err := db.InitDB(maxconn, maxLifetime, config.DB.CreateDSN()); err != nil {
+		errors.WithStack(err)
+	}
+	// TODO: zap 使う
+	fmt.Println("database connected")
 }
