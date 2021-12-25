@@ -17,22 +17,34 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/sanoyo/mini-redash-go/db"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+)
+
+const (
+	maxconn     = 10
+	maxLifetime = 5 * time.Minute
 )
 
 // connectCmd represents the connect command
 var connectCmd = &cobra.Command{
 	Use:   "connect",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "connect your data source",
+	Long:  `Cobra is a CLI library for Go that empowers applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("connect called")
+		// init db setting
+		if err := db.Init(maxconn, maxLifetime); err != nil {
+			errors.WithStack(err)
+		}
+		// TODO: zap 使う
+		fmt.Println("database connected")
+
+		// TODO:
 	},
 }
 
