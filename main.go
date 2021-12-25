@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/sanoyo/mini-redash-gocobra/cmd"
+import "github.com/sanoyo/mini-redash-go/cmd"
 
 func main() {
 	cmd.Execute()
