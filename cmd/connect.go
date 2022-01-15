@@ -105,7 +105,6 @@ func Run() {
 			errors.WithStack(err)
 		}
 
-		// タイプアサーションの数を増やせばよさそう
 		for _, v := range values {
 			switch v.(type) {
 			case string:
