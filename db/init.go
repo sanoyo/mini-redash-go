@@ -7,12 +7,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-func InitDB(maxconn int, maxLifetime time.Duration, dsn string) error {
+func InitDB(maxconn int, maxLifetime time.Duration, dsn string) (*sql.DB, error) {
 	pool, err := sql.Open("pgx", dsn)
 	if err != nil {
 		errors.WithStack(err)
 	}
-	defer pool.Close()
 
 	pool.SetMaxIdleConns(maxconn)
 	pool.SetMaxOpenConns(maxconn)
@@ -22,5 +21,5 @@ func InitDB(maxconn int, maxLifetime time.Duration, dsn string) error {
 		errors.WithStack(err)
 	}
 
-	return nil
+	return pool, nil
 }

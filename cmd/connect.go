@@ -16,7 +16,9 @@ limitations under the License.
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"time"
 
 	"github.com/sanoyo/mini-redash-go/config"
@@ -53,9 +55,57 @@ func Run() {
 	}
 
 	// init db setting
-	if err := db.InitDB(maxconn, maxLifetime, config.DB.CreateDSN()); err != nil {
+	db, err := db.InitDB(maxconn, maxLifetime, config.DB.CreateDSN())
+	if err != nil {
 		errors.WithStack(err)
 	}
 	// TODO: zap 使う
 	fmt.Println("database connected")
+
+	sql, err := ReadSQLFile("sample/sample.sql")
+	if err != nil {
+		errors.WithStack(err)
+	}
+
+	fmt.Println("sql", sql)
+
+	// 1件の結果を返す
+	mybook := MyBook{}
+	rows, err := db.Query(sql)
+	if err != nil {
+		errors.WithStack(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		err := rows.Scan(&mybook.ID, &mybook.Name)
+		if err != nil {
+			errors.WithStack(err)
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		errors.WithStack(err)
+	}
+
+	fmt.Println("mybook", mybook)
+
+	// TODO: FieldDescrptions使う
+	// https://pkg.go.dev/github.com/jackc/pgx#Rows.FieldDescriptions
+}
+
+func ReadSQLFile(path string) (string, error) {
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	b := bytes.NewBuffer(content)
+
+	return b.String(), nil
+}
+
+type MyBook struct {
+	ID   int
+	Name string
 }
