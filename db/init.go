@@ -1,25 +1,31 @@
 package db
 
 import (
-	"database/sql"
+	"context"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/jackc/pgx/v4"
 )
 
-func InitDB(maxconn int, maxLifetime time.Duration, dsn string) (*sql.DB, error) {
-	pool, err := sql.Open("pgx", dsn)
+func InitDB(maxconn int, maxLifetime time.Duration, dsn string) (*pgx.Conn, error) {
+	// pool, err := sql.Open("pgx", dsn)
+	// if err != nil {
+	// 	errors.WithStack(err)
+	// }
+
+	// pool.SetMaxIdleConns(maxconn)
+	// pool.SetMaxOpenConns(maxconn)
+	// pool.SetConnMaxLifetime(maxLifetime)
+
+	// if err := pool.Ping(); err != nil {
+	// 	errors.WithStack(err)
+	// }
+	// return pool, nil
+
+	conn, err := pgx.Connect(context.Background(), dsn)
 	if err != nil {
-		errors.WithStack(err)
+		return nil, err
 	}
 
-	pool.SetMaxIdleConns(maxconn)
-	pool.SetMaxOpenConns(maxconn)
-	pool.SetConnMaxLifetime(maxLifetime)
-
-	if err := pool.Ping(); err != nil {
-		errors.WithStack(err)
-	}
-
-	return pool, nil
+	return conn, nil
 }
