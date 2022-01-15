@@ -17,8 +17,11 @@ package cmd
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
+	"strconv"
+	"sync"
 	"time"
 
 	"github.com/sanoyo/mini-redash-go/config"
@@ -69,29 +72,56 @@ func Run() {
 
 	fmt.Println("sql", sql)
 
-	// 1件の結果を返す
-	mybook := MyBook{}
-	rows, err := db.Query(sql)
+	rows, err := db.Query(context.TODO(), sql)
 	if err != nil {
 		errors.WithStack(err)
 	}
 	defer rows.Close()
 
+	ret := ""
+	once := sync.Once{}
 	for rows.Next() {
-		err := rows.Scan(&mybook.ID, &mybook.Name)
+		once.Do(
+			func() {
+				// https://pkg.go.dev/github.com/jackc/pgx#Rows.FieldDescriptions
+				fds := rows.FieldDescriptions()
+
+				header := ""
+				for _, fd := range fds {
+					column := string(fd.Name)
+					fmt.Println("column", column)
+					header += column + " "
+				}
+
+				fmt.Println("header", header)
+
+				ret += header + fmt.Sprintln()
+				fmt.Println("ret", ret)
+			},
+		)
+
+		values, err := rows.Values()
 		if err != nil {
 			errors.WithStack(err)
 		}
+
+		// タイプアサーションの数を増やせばよさそう
+		for _, v := range values {
+			switch v.(type) {
+			case string:
+				ret += v.(string) + " "
+			case int:
+				ret += string(strconv.Itoa(v.(int))) + " "
+			}
+		}
+		ret += fmt.Sprintln()
 	}
 	err = rows.Err()
 	if err != nil {
 		errors.WithStack(err)
 	}
 
-	fmt.Println("mybook", mybook)
-
-	// TODO: FieldDescrptions使う
-	// https://pkg.go.dev/github.com/jackc/pgx#Rows.FieldDescriptions
+	fmt.Println("ret", ret)
 }
 
 func ReadSQLFile(path string) (string, error) {
@@ -103,9 +133,4 @@ func ReadSQLFile(path string) (string, error) {
 	b := bytes.NewBuffer(content)
 
 	return b.String(), nil
-}
-
-type MyBook struct {
-	ID   int
-	Name string
 }
