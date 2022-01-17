@@ -20,10 +20,11 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"strconv"
+	"os"
 	"sync"
 	"time"
 
+	"github.com/olekukonko/tablewriter"
 	"github.com/sanoyo/mini-redash-go/config"
 	"github.com/sanoyo/mini-redash-go/db"
 
@@ -33,7 +34,7 @@ import (
 )
 
 const (
-	maxconn     = 25
+	maxconn     = 1
 	maxLifetime = 5 * time.Minute
 )
 
@@ -65,12 +66,11 @@ func Run() {
 	// TODO: zap 使う
 	fmt.Println("database connected")
 
+	// TODO: -f オプションとかでファイルを渡せるようにする
 	sql, err := ReadSQLFile("sample/sample.sql")
 	if err != nil {
 		errors.WithStack(err)
 	}
-
-	fmt.Println("sql", sql)
 
 	rows, err := db.Query(context.TODO(), sql)
 	if err != nil {
@@ -78,7 +78,9 @@ func Run() {
 	}
 	defer rows.Close()
 
-	ret := ""
+	var ids []uint16
+	var header []string
+	var tempStr []string
 	once := sync.Once{}
 	for rows.Next() {
 		once.Do(
@@ -86,17 +88,11 @@ func Run() {
 				// https://pkg.go.dev/github.com/jackc/pgx#Rows.FieldDescriptions
 				fds := rows.FieldDescriptions()
 
-				header := ""
 				for _, fd := range fds {
 					column := string(fd.Name)
-					fmt.Println("column", column)
-					header += column + " "
+					header = append(header, column)
+					ids = append(ids, fd.TableAttributeNumber)
 				}
-
-				fmt.Println("header", header)
-
-				ret += header + fmt.Sprintln()
-				fmt.Println("ret", ret)
 			},
 		)
 
@@ -106,21 +102,33 @@ func Run() {
 		}
 
 		for _, v := range values {
-			switch v.(type) {
+			switch v := v.(type) {
 			case string:
-				ret += v.(string) + " "
+				tempStr = append(tempStr, v)
 			case int:
-				ret += string(strconv.Itoa(v.(int))) + " "
+				// ret += string(strconv.Itoa(v.(int))) + " "
 			}
 		}
-		ret += fmt.Sprintln()
 	}
+
 	err = rows.Err()
 	if err != nil {
 		errors.WithStack(err)
 	}
 
-	fmt.Println("ret", ret)
+	data := make([][]string, len(tempStr))
+	for i, v := range data {
+		v = []string{fmt.Sprint(ids[i]), tempStr[i]}
+		data = append(data, v)
+	}
+
+	table := tablewriter.NewWriter(os.Stdout)
+	table.SetHeader(header)
+
+	for _, v := range data {
+		table.Append(v)
+	}
+	table.Render()
 }
 
 func ReadSQLFile(path string) (string, error) {
