@@ -67,7 +67,7 @@ func Run() {
 	fmt.Println("database connected")
 
 	// TODO: -f オプションとかでファイルを渡せるようにする
-	sql, err := ReadSQLFile("sample/sample.sql")
+	sql, err := readSQLFile("sample/sample.sql")
 	if err != nil {
 		errors.WithStack(err)
 	}
@@ -78,7 +78,6 @@ func Run() {
 	}
 	defer rows.Close()
 
-	var ids []uint16
 	var header []string
 	var tempStr []string
 	once := sync.Once{}
@@ -91,7 +90,6 @@ func Run() {
 				for _, fd := range fds {
 					column := string(fd.Name)
 					header = append(header, column)
-					ids = append(ids, fd.TableAttributeNumber)
 				}
 			},
 		)
@@ -116,6 +114,15 @@ func Run() {
 		errors.WithStack(err)
 	}
 
+	ids := make([]int, len(tempStr))
+	for i := range ids {
+		ids = append(ids, i+1)
+	}
+	_, ids, err = delete_int(ids, 0)
+	if err != nil {
+		errors.WithStack(err)
+	}
+
 	data := make([][]string, len(tempStr))
 	for i, v := range data {
 		v = []string{fmt.Sprint(ids[i]), tempStr[i]}
@@ -131,7 +138,7 @@ func Run() {
 	table.Render()
 }
 
-func ReadSQLFile(path string) (string, error) {
+func readSQLFile(path string) (string, error) {
 	content, err := ioutil.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -140,4 +147,19 @@ func ReadSQLFile(path string) (string, error) {
 	b := bytes.NewBuffer(content)
 
 	return b.String(), nil
+}
+
+func delete_int(slice []int, s int) (int, []int, error) {
+	ret := make([]int, len(slice))
+	i := 0
+	for _, x := range slice {
+		if s != x {
+			ret[i] = x
+			i++
+		}
+	}
+	if len(ret[:i]) == len(slice) {
+		return 0, slice, fmt.Errorf("Couldn't find")
+	}
+	return s, ret[:i], nil
 }
