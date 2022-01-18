@@ -24,11 +24,13 @@ import (
 	"sync"
 	"time"
 
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/olekukonko/tablewriter"
+
 	"github.com/sanoyo/mini-redash-go/config"
 	"github.com/sanoyo/mini-redash-go/db"
+	"github.com/sanoyo/mini-redash-go/log"
 
-	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
@@ -53,6 +55,9 @@ func init() {
 }
 
 func Run() {
+	// init zap logging
+	log.InitLogger()
+
 	config, err := config.InitConfig()
 	if err != nil {
 		errors.WithStack(err)
@@ -63,8 +68,7 @@ func Run() {
 	if err != nil {
 		errors.WithStack(err)
 	}
-	// TODO: zap 使う
-	fmt.Println("database connected")
+	log.Logger.Info("database connected")
 
 	// TODO: -f オプションとかでファイルを渡せるようにする
 	sql, err := readSQLFile("sample/sample.sql")
