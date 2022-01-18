@@ -46,18 +46,23 @@ var connectCmd = &cobra.Command{
 	Short: "connect your data source",
 	Long:  `Cobra is a CLI library for Go that empowers applications.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		Run()
+		flag, err := cmd.PersistentFlags().GetString("file")
+		if err != nil {
+			log.Logger.Error("file is empty")
+		}
+		execute(flag)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(connectCmd)
-}
-
-func Run() {
 	// init zap logging
 	log.InitLogger()
 
+	connectCmd.PersistentFlags().String("file", "", "file option")
+	rootCmd.AddCommand(connectCmd)
+}
+
+func execute(flag string) {
 	config, err := config.InitConfig()
 	if err != nil {
 		errors.WithStack(err)
@@ -70,8 +75,7 @@ func Run() {
 	}
 	log.Logger.Info("database connected")
 
-	// TODO: -f オプションとかでファイルを渡せるようにする
-	sql, err := readSQLFile("sample/sample.sql")
+	sql, err := readSQLFile(flag)
 	if err != nil {
 		errors.WithStack(err)
 	}
@@ -108,7 +112,6 @@ func Run() {
 			case string:
 				tempStr = append(tempStr, v)
 			case int:
-				// ret += string(strconv.Itoa(v.(int))) + " "
 			}
 		}
 	}
@@ -122,7 +125,7 @@ func Run() {
 	for i := range ids {
 		ids = append(ids, i+1)
 	}
-	_, ids, err = delete_int(ids, 0)
+	_, ids, err = deleteDuplicateInt(ids, 0)
 	if err != nil {
 		errors.WithStack(err)
 	}
@@ -153,7 +156,7 @@ func readSQLFile(path string) (string, error) {
 	return b.String(), nil
 }
 
-func delete_int(slice []int, s int) (int, []int, error) {
+func deleteDuplicateInt(slice []int, s int) (int, []int, error) {
 	ret := make([]int, len(slice))
 	i := 0
 	for _, x := range slice {
