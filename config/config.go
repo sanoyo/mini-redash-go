@@ -7,6 +7,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+var Config *config
+
 type config struct {
 	DB db
 }
