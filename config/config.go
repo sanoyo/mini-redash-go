@@ -4,13 +4,12 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/configor"
-	"github.com/pkg/errors"
 )
 
 var Config *config
 
 type config struct {
-	DB db
+	DB *db
 }
 
 type db struct {
@@ -22,16 +21,11 @@ type db struct {
 	User string `env:"DB_USER" required:"true"`
 }
 
-func InitConfig() (*config, error) {
-	conf := &config{}
-	if err := configor.Load(conf, "./config/config.yaml"); err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return conf, nil
+func InitConfig() {
+	_ = configor.Load(&Config, "./config/config.yaml")
 }
 
-func (d db) CreateDSN() string {
+func (d *db) CreateDSN() string {
 	dsn := fmt.Sprintf("host=%s port=%d dbname=%s sslmode=%s user=%s",
 		d.Host,
 		d.Port,

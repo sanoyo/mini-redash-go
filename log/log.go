@@ -2,11 +2,19 @@ package log
 
 import "go.uber.org/zap"
 
-var Logger *zap.Logger
+var (
+	Logger *zap.Logger
+	err    error
+)
 
-func InitLogger() {
-	Logger, _ = zap.NewProduction()
+func InitLogger() error {
+	Logger, err = zap.NewProduction()
+	if err != nil {
+		return err
+	}
 	// _ = zap.NewProductionConfig()
+
+	return nil
 }
 
 // ref: https://tomokazu-kozuma.com/minimum-setting-method-of-golangs-logger-zap/

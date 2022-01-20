@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"os"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
@@ -57,7 +58,10 @@ func init() {
 	config.InitConfig()
 
 	// init db
-	db.InitDB(maxconn, maxLifetime, config.Config.DB.CreateDSN())
+	err := db.InitDB(maxconn, maxLifetime, config.Config.DB.CreateDSN())
+	if err != nil {
+		os.Exit(0)
+	}
 	log.Logger.Info("database connected")
 
 	connectCmd.PersistentFlags().String("file", "", "file option")

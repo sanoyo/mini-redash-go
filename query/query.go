@@ -29,7 +29,7 @@ func Analyse(file string) ([]string, [][]string, error) {
 	for rows.Next() {
 		once.Do(
 			func() {
-				// https://pkg.go.dev/github.com/jackc/pgx#Rows.FieldDescriptions
+				// ref: https://pkg.go.dev/github.com/jackc/pgx#Rows.FieldDescriptions
 				fds := rows.FieldDescriptions()
 
 				for _, fd := range fds {

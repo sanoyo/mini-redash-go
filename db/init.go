@@ -7,13 +7,16 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-var DB *pgx.Conn
+var (
+	DB  *pgx.Conn
+	err error
+)
 
-func InitDB(maxconn int, maxLifetime time.Duration, dsn string) (*pgx.Conn, error) {
-	conn, err := pgx.Connect(context.Background(), dsn)
+func InitDB(maxconn int, maxLifetime time.Duration, dsn string) error {
+	DB, err = pgx.Connect(context.Background(), dsn)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return conn, nil
+	return nil
 }
